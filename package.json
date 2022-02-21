@@ -1,9 +1,7 @@
 {
   "dependencies": {
-    "axios": "^0.26.0",
-    "bignumber.js": "^9.0.2",
-    "nano-address-validator": "^3.0.0",
-    "nanocurrency": "^2.5.0",
+    "bananojs": "0.0.4",
+    "mongodb": "^4.4.0",
     "snoowrap": "^1.23.0"
   }
 }
