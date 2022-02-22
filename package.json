@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "bananojs": "0.0.4",
+    "@bananocoin/bananojs": "^2.5.3",
     "mongodb": "^4.4.0",
     "snoowrap": "^1.23.0"
   }
