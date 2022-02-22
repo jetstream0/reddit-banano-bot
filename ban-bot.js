@@ -90,54 +90,43 @@ const ACCOUNT = new snoowrap({
 });
 
 async function main() {
-	while (true) {
-		try {
-			await banano.receive_deposits();
-
-			console.log("Fetching thread...");
-
-			const thread = await ACCOUNT.getSubmission(REDDIT_THREAD_ID).expandReplies({ depth: 0 })
-
-			const start_date = Date.now();
-
-			console.log("Fetching ALL comments!");
-			const comments = await thread.comments.fetchAll({ skipReplies: true });
-
-			console.log("Took", Date.now() - start_date, "ms");
-			console.log("Found", comments.length, "comments");
-
-			for (let i = 0; i < comments.length; i++) {
-				try {
-					const ban_address = await checkComment(comments[i]);
-
-					if (ban_address !== null) {
-						console.log("Sending banano to comment:", comments[i].id, "User:", comments[i].author.name, "Address:", ban_address);
-
-						await insert(ban_address);
+  while (true) {
+    try {
+      console.log('Checking again')
+      await banano.receive_deposits();
+      //post should be sorted by new comments
+      let post = ACCOUNT.getSubmission(REDDIT_THREAD_ID);
+      let comments = post.fetch();
+      for (let i=0; i < comments.length; i++) {
+        try {
+          let comment = await checkComment(await comments[i]);
+          if (ban_address !== null) {
+		  			console.log("Sending banano to comment:", comments[i].id, "User:", comments[i].author.name, "Address:", ban_address);
+  
+		  			await insert(ban_address);
             await insert(comments[i].author.name);
-
-						await sendTip(ban_address);
-					}
-				} catch (e) {
-					console.log("SOMETHING EXTREMELY BAD HAPPENED PLEASE FIX: ", e);
-				}
-			}
-			console.log("Completed comment section. Saving previously awarded users/addresses ....")
-			saveData();
-			console.log(".... previously awarded users/addresses saved successfully.")
-			console.log("Waiting 5s seconds before fetching again...");
-
-			await sleep(5000);
-		} catch (e) {
-			if (e.toString().includes("ratelimit was exceeded")) {
-				console.log("Encountered rate limit, waiting 30s...");
-				await sleep(30000);
-			} else {
-				console.log("Something wrong happened, waiting 5s before resuming:", e);
-				await sleep(5000);
-			}
-		}
-	}
+  
+		  			let tx = await sendTip(ban_address);
+  
+            comments[i].reply(
+              `5 Ban has been sent to your [address](https://yellowspyglass.com/hash/`+tx+`)!
+              
+              Check out r/banano and the [Banano Discord Server](chat.banano.cc).`
+            );
+		  		}
+        } catch (e) {
+          console.log(e)
+        }
+        //ratelimit is 60 per minute (1 per second), but lets give it some buffer
+        await sleep(1200);
+      }
+      //check every five minutes
+      await sleep(5*60*1000)
+    } catch (e) {
+      console.log('Ratelimited exceeded')
+      await sleep(61*1000)
+    }
+  }
 }
 
 main();

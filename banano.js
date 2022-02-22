@@ -3,8 +3,7 @@ bananojs.setBananodeApiUrl('https://kaliumapi.appditto.com/api');
 
 async function send_banano(addr, amount) {
   try {
-    await bananojs.sendBananoWithdrawalFromSeed(process.env.seed, 0, addr, amount);
-    return true;
+    return await bananojs.sendBananoWithdrawalFromSeed(process.env.seed, 0, addr, amount);
   } catch (e) {
     return false;
   }
