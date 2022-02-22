@@ -8,7 +8,8 @@ const banano = require('./banano.js');
 // CONFIG
 //const TIP_AMOUNT = new BigNumber("13370000000000000000000000000");
 const TIP_AMOUNT = 5; //amount you are giving to each user example: "1000000000000000000000000000" = 0.01 ban
-const REDDIT_THREAD_ID = "<SUBREDDIT_ID_NUMBER>"; //subreddit id example: supnge 
+const REDDIT_THREAD_ID = "<SUBREDDIT_ID_NUMBER>"; //subreddit id example: supnge
+const SELF_ADDRESS = "ban_3fzpw7pb9xt64qhwi47oa47x9zj713fkshntdk5y7khmn54n18szb7ymybdt" 
 
 //reddit api information. THIS INFORMATION IS OBTAINED THROUGH REDDIT API
 const REDDIT_USER_AGENT = '<NAME_OF_REDDIT_AGENT>' //
@@ -96,22 +97,24 @@ async function main() {
 			await banano.receive_deposits();
 			//post should be sorted by new comments
 			let post = ACCOUNT.getSubmission(REDDIT_THREAD_ID);
-			let comments = post.fetch();
+			let comments = await post.fetch();
+			comments = comments.comments;
 			for (let i=0; i < comments.length; i++) {
 				try {
-					let comment = await checkComment(await comments[i]);
+					let ban_address = await checkComment(await comments[i]);
+					console.log('ban address found', ban_address)
 					if (ban_address !== null) {
 						console.log("Sending banano to comment:", comments[i].id, "User:", comments[i].author.name, "Address:", ban_address);
-
+	
 						await insert(ban_address);
 						await insert(comments[i].author.name);
 	
 						let tx = await sendTip(ban_address);
-
+	
 						comments[i].reply(
-							`5 Ban has been sent to your [address](https://yellowspyglass.com/hash/`+tx+`)!
+							`5 BAN has been sent to your [address](https://yellowspyglass.com/hash/`+tx+`)! Feeless, and blazing fast.
 							
-							Check out r/banano and the [Banano Discord Server](chat.banano.cc).`
+							Check out r/banano and the [Banano Discord Server](chat.banano.cc). There are more than a dozen faucets, check them out for more free Banano.`
 						);
 					}
 				} catch (e) {
@@ -123,7 +126,8 @@ async function main() {
 			//check every five minutes
 			await sleep(5*60*1000)
 		} catch (e) {
-			console.log('Ratelimited exceeded')
+			console.log('Ratelimited exceeded or other error')
+			console.log(e)
 			await sleep(61*1000)
 		}
 	}
