@@ -29,19 +29,19 @@ db.then((db) => {collection = db.collection("collection");
 
 //`user` param can be ban address or reddit username
 async function find(user) {
-  return await collection.findOne({"user":user});
+	return await collection.findOne({"user":user});
 }
 
 async function insert(user) {
-  await collection.insertOne({"user":user});
+	await collection.insertOne({"user":user});
 }
 
 async function sendTip(destination) {
 	console.log("Sending tip to", destination);
-  let send = banano.send_banano(destination, TIP_AMOUNT);
-  if (!send) {
-    console.log("Send failed")
-  }
+	let send = banano.send_banano(destination, TIP_AMOUNT);
+	if (!send) {
+		console.log("Send failed")
+	}
 }
 
 async function checkComment(comment) {
@@ -72,7 +72,7 @@ async function checkComment(comment) {
 		return null;
 	}
 
-  let faucet_bal = Number(await banano.check_bal());
+	let faucet_bal = Number(await banano.check_bal());
 	if (faucet_bal < 1) {
 		console.log("Balance low, quitting.");
 		process.exit();
@@ -90,43 +90,43 @@ const ACCOUNT = new snoowrap({
 });
 
 async function main() {
-  while (true) {
-    try {
-      console.log('Checking again')
-      await banano.receive_deposits();
-      //post should be sorted by new comments
-      let post = ACCOUNT.getSubmission(REDDIT_THREAD_ID);
-      let comments = post.fetch();
-      for (let i=0; i < comments.length; i++) {
-        try {
-          let comment = await checkComment(await comments[i]);
-          if (ban_address !== null) {
-		  			console.log("Sending banano to comment:", comments[i].id, "User:", comments[i].author.name, "Address:", ban_address);
-  
-		  			await insert(ban_address);
-            await insert(comments[i].author.name);
-  
-		  			let tx = await sendTip(ban_address);
-  
-            comments[i].reply(
-              `5 Ban has been sent to your [address](https://yellowspyglass.com/hash/`+tx+`)!
-              
-              Check out r/banano and the [Banano Discord Server](chat.banano.cc).`
-            );
-		  		}
-        } catch (e) {
-          console.log(e)
-        }
-        //ratelimit is 60 per minute (1 per second), but lets give it some buffer
-        await sleep(1200);
-      }
-      //check every five minutes
-      await sleep(5*60*1000)
-    } catch (e) {
-      console.log('Ratelimited exceeded')
-      await sleep(61*1000)
-    }
-  }
+	while (true) {
+		try {
+			console.log('Checking again')
+			await banano.receive_deposits();
+			//post should be sorted by new comments
+			let post = ACCOUNT.getSubmission(REDDIT_THREAD_ID);
+			let comments = post.fetch();
+			for (let i=0; i < comments.length; i++) {
+				try {
+					let comment = await checkComment(await comments[i]);
+					if (ban_address !== null) {
+						console.log("Sending banano to comment:", comments[i].id, "User:", comments[i].author.name, "Address:", ban_address);
+
+						await insert(ban_address);
+						await insert(comments[i].author.name);
+	
+						let tx = await sendTip(ban_address);
+
+						comments[i].reply(
+							`5 Ban has been sent to your [address](https://yellowspyglass.com/hash/`+tx+`)!
+							
+							Check out r/banano and the [Banano Discord Server](chat.banano.cc).`
+						);
+					}
+				} catch (e) {
+					console.log(e)
+				}
+				//ratelimit is 60 per minute (1 per second), but lets give it some buffer
+				await sleep(1200);
+			}
+			//check every five minutes
+			await sleep(5*60*1000)
+		} catch (e) {
+			console.log('Ratelimited exceeded')
+			await sleep(61*1000)
+		}
+	}
 }
 
 main();
